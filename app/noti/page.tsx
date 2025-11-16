@@ -5,9 +5,9 @@ import TextType from "@/components/text-type";
 import useSubscribe from "@/services/noti/use-subscribe";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
-export default function Home() {
+function NotiPage() {
   const searchParams = useSearchParams();
   const user_id = searchParams.get("user_id");
   console.log("User ID from URL:", user_id);
@@ -175,5 +175,13 @@ export default function Home() {
         <p className="mt-4 text-sm text-gray-600">{permissionMessage}</p>
       )}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NotiPage />
+    </Suspense>
   );
 }
