@@ -1,0 +1,1 @@
+export const is_standalone = typeof window !== "undefined" && window.matchMedia("(display-mode: standalone)").matches;

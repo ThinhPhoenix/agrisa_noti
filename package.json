@@ -6,10 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "ass": "bun ./script/gen-assets.js"
   },
   "dependencies": {
+    "axios": "^1.13.2",
+    "gsap": "^3.13.0",
     "next": "16.0.3",
+    "next-pwa": "^5.6.0",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
