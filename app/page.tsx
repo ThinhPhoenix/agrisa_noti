@@ -13,7 +13,11 @@ function HomePage() {
       router.replace(`/noti?user_id=${user_id}`);
     }
   }, [router, searchParams]);
-  return <div className="flex items-center justify-center w-full min-h-screen text-center">Bấm chia sẻ và thêm ứng dụng vào màn hình chính để nhận thông báo.</div>;
+  return (
+    <div className="flex items-center justify-center w-full min-h-screen text-center">
+      Bấm chia sẻ và thêm ứng dụng vào màn hình chính để nhận thông báo.
+    </div>
+  );
 }
 
 export default function Page() {
