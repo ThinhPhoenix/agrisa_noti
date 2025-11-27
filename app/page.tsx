@@ -1,6 +1,5 @@
 "use client";
 
-import { is_standalone } from "@/libs/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, Suspense } from "react";
 
@@ -9,7 +8,7 @@ function HomePage() {
   const searchParams = useSearchParams();
   useEffect(() => {
     const user_id = searchParams.get("user_id");
-    if (user_id && is_standalone) {
+    if (user_id) {
       router.replace(`/noti?user_id=${user_id}`);
     }
   }, [router, searchParams]);
