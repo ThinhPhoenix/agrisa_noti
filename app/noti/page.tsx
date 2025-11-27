@@ -22,6 +22,17 @@ function NotiPage() {
     const [permissionMessage, setPermissionMessage] = useState("");
     const [isIOSStandalone, setIsIOSStandalone] = useState(false);
     const [userIdInput, setUserIdInput] = useState("");
+    const [isIOS, setIsIOS] = useState(false);
+
+    // Check if device is iOS
+    const checkIsIOS = () => {
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        return /iphone|ipad|ipod/.test(userAgent);
+    };
+
+    useEffect(() => {
+        setIsIOS(checkIsIOS());
+    }, []);
 
     console.log("User ID:", user_id);
 
@@ -168,12 +179,17 @@ function NotiPage() {
     const handleSaveUserId = () => {
         if (userIdInput.trim()) {
             localStorage.setItem("user_id", userIdInput.trim());
-            window.location.href = `/noti?user_id=${userIdInput.trim()}`;
+            // Refresh page on iOS
+            if (isIOS) {
+                window.location.reload();
+            } else {
+                window.location.href = `/noti?user_id=${userIdInput.trim()}`;
+            }
         }
     };
 
-    // Show user_id input form if no user_id is available
-    if (!user_id) {
+    // Show user_id input form if no user_id is available or if iOS without user_id
+    if (!user_id || (isIOS && !user_id)) {
         return (
             <div className="flex items-center justify-center min-h-screen flex-col p-4">
                 <Image
