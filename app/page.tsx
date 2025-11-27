@@ -1,4 +1,7 @@
-"use client";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+("use client");
 
 import Assets from "@/assets";
 import Image from "next/image";
@@ -8,21 +11,36 @@ import { Suspense, useEffect, useState } from "react";
 function HomePage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const [isIOS, setIsIOS] = useState(false);
+    const [isIOS, setIsIOS] = useState<boolean | null>(null);
     const [userId, setUserId] = useState("");
+    const [isChecking, setIsChecking] = useState(true);
 
     useEffect(() => {
-        const userAgent = navigator.userAgent.toLowerCase();
-        const iOS = /iphone|ipad|ipod/.test(userAgent);
-        setIsIOS(iOS);
+        // Force client-side detection
+        const checkDevice = () => {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const iOS = /iphone|ipad|ipod/.test(userAgent);
 
-        const user_id = searchParams.get("user_id") || "";
-        setUserId(user_id);
+            console.log("User Agent:", userAgent); // Debug
+            console.log("Is iOS:", iOS); // Debug
 
-        if (!iOS) {
-            // Android: redirect to /noti
-            router.replace(user_id ? `/noti?user_id=${user_id}` : "/noti");
-        }
+            setIsIOS(iOS);
+            setIsChecking(false);
+
+            const user_id = searchParams.get("user_id") || "";
+            setUserId(user_id);
+
+            if (!iOS) {
+                // Android: redirect to /noti
+                setTimeout(() => {
+                    router.replace(
+                        user_id ? `/noti?user_id=${user_id}` : "/noti"
+                    );
+                }, 100);
+            }
+        };
+
+        checkDevice();
     }, [router, searchParams]);
 
     const copyUserId = () => {
@@ -30,6 +48,16 @@ function HomePage() {
         alert("Đã copy User ID!");
     };
 
+    // Đang kiểm tra device
+    if (isChecking || isIOS === null) {
+        return (
+            <div className="flex items-center justify-center w-full min-h-screen text-center">
+                Đang tải...
+            </div>
+        );
+    }
+
+    // Là Android, đang redirect
     if (!isIOS) {
         return (
             <div className="flex items-center justify-center w-full min-h-screen text-center">
