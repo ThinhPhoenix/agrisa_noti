@@ -5,45 +5,26 @@ import TextType from "@/components/text-type";
 import useSubscribe from "@/services/noti/use-subscribe";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 function NotiPage() {
     const searchParams = useSearchParams();
     const user_id_from_url = searchParams.get("user_id");
-    const [user_id, setUserId] = useState<string | null>(null);
+    const user_id = useMemo(() => {
+        if (user_id_from_url) {
+            localStorage.setItem("user_id", user_id_from_url);
+            return user_id_from_url;
+        } else {
+            return localStorage.getItem("user_id");
+        }
+    }, [user_id_from_url]);
     const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
     const [permissionMessage, setPermissionMessage] = useState("");
     const [isIOSStandalone, setIsIOSStandalone] = useState(false);
 
-    useEffect(() => {
-        if (user_id_from_url) {
-            localStorage.setItem("user_id", user_id_from_url);
-            setUserId(user_id_from_url);
-        } else {
-            const stored = localStorage.getItem("user_id");
-            if (stored) {
-                setUserId(stored);
-            }
-        }
-    }, [user_id_from_url]);
-
     console.log("User ID:", user_id);
 
     const checkNotificationPermission = () => {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const isStandalone = window.matchMedia(
-            "(display-mode: standalone)"
-        ).matches;
-
-        if (isIOS && isStandalone) {
-            setIsIOSStandalone(true);
-            setIsNotificationEnabled(false);
-            setPermissionMessage(
-                "Thông báo đẩy không được hỗ trợ trên iOS khi ứng dụng được thêm vào màn hình chính. Vui lòng sử dụng Safari để nhận thông báo."
-            );
-            return;
-        }
-
         setIsIOSStandalone(false);
         if ("Notification" in window) {
             if (Notification.permission === "granted") {
@@ -64,7 +45,29 @@ function NotiPage() {
 
     const { subscribeWeb } = useSubscribe(user_id ?? undefined);
 
-    const subscribeWebPush = async () => {
+    const urlBase64ToUint8Array = (base64String: string) => {
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding)
+            .replace(/-/g, "+")
+            .replace(/_/g, "/");
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    };
+
+    const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
+        const bytes = new Uint8Array(buffer);
+        let binary = "";
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return window.btoa(binary);
+    };
+
+    const subscribeWebPush = useCallback(async () => {
         console.log("Starting subscribeWebPush...");
         if ("serviceWorker" in navigator && "PushManager" in window) {
             try {
@@ -106,45 +109,9 @@ function NotiPage() {
         } else {
             console.log("Service Worker or PushManager not supported");
         }
-    };
-
-    const urlBase64ToUint8Array = (base64String: string) => {
-        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-        const base64 = (base64String + padding)
-            .replace(/-/g, "+")
-            .replace(/_/g, "/");
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-        }
-        return outputArray;
-    };
-
-    const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
-        const bytes = new Uint8Array(buffer);
-        let binary = "";
-        for (let i = 0; i < bytes.byteLength; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        return window.btoa(binary);
-    };
+    }, [user_id, subscribeWeb]);
 
     const requestNotificationPermission = async () => {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const isStandalone = window.matchMedia(
-            "(display-mode: standalone)"
-        ).matches;
-
-        if (isIOS && isStandalone) {
-            setIsIOSStandalone(true);
-            setIsNotificationEnabled(false);
-            setPermissionMessage(
-                "Thông báo đẩy không được hỗ trợ trên iOS khi ứng dụng được thêm vào màn hình chính. Vui lòng sử dụng Safari để nhận thông báo."
-            );
-            return;
-        }
-
         setIsIOSStandalone(false);
         console.log("Requesting notification permission...");
         if ("Notification" in window) {
@@ -184,19 +151,17 @@ function NotiPage() {
 
     useEffect(() => {
         checkNotificationPermission();
-
-        // If permission already granted, subscribe to web push
-        if ("Notification" in window && Notification.permission === "granted") {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            const isStandalone = window.matchMedia(
-                "(display-mode: standalone)"
-            ).matches;
-            if (!(isIOS && isStandalone)) {
-                subscribeWebPush();
-            }
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        if (
+            user_id &&
+            "Notification" in window &&
+            Notification.permission === "granted"
+        ) {
+            subscribeWebPush();
+        }
+    }, [user_id, subscribeWebPush]);
 
     return (
         <div className="flex items-center justify-center min-h-screen flex-col">
