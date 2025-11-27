@@ -1,7 +1,4 @@
 "use client";
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 
 import Assets from "@/assets";
 import Image from "next/image";
