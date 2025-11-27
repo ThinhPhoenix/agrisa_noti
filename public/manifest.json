@@ -2,7 +2,7 @@
     "name": "Agrisa 🔔",
     "short_name": "Agrisa 🔔",
     "description": "Ứng dụng cho phép thông báo Agrisa trên web",
-    "start_url": "/noti",
+    "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#000000",

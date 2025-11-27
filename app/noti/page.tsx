@@ -21,6 +21,7 @@ function NotiPage() {
     const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
     const [permissionMessage, setPermissionMessage] = useState("");
     const [isIOSStandalone, setIsIOSStandalone] = useState(false);
+    const [userIdInput, setUserIdInput] = useState("");
 
     console.log("User ID:", user_id);
 
@@ -73,7 +74,7 @@ function NotiPage() {
             try {
                 console.log("Registering service worker...");
                 const registration = await navigator.serviceWorker.register(
-                    "/sw-custom.js"
+                    "/sw.js"
                 );
                 console.log("Service Worker registered");
 
@@ -150,6 +151,7 @@ function NotiPage() {
     };
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         checkNotificationPermission();
     }, []);
 
@@ -162,6 +164,62 @@ function NotiPage() {
             subscribeWebPush();
         }
     }, [user_id, subscribeWebPush]);
+
+    const handleSaveUserId = () => {
+        if (userIdInput.trim()) {
+            localStorage.setItem("user_id", userIdInput.trim());
+            window.location.href = `/noti?user_id=${userIdInput.trim()}`;
+        }
+    };
+
+    // Show user_id input form if no user_id is available
+    if (!user_id) {
+        return (
+            <div className="flex items-center justify-center min-h-screen flex-col p-4">
+                <Image
+                    src={Assets.ImagesNoti.src}
+                    alt={""}
+                    width={200}
+                    height={200}
+                    className="hue-rotate-220"
+                />
+                <Image
+                    src={Assets.ImagesAgrisa.src}
+                    alt={""}
+                    width={80}
+                    height={80}
+                    className="fix absolute top-0 left-0 p-4"
+                />
+                <h2 className="text-xl font-semibold mb-4">
+                    Vui lòng nhập User ID
+                </h2>
+                <p className="text-sm text-gray-600 mb-4 text-center max-w-md">
+                    Để nhận thông báo, bạn cần cung cấp User ID của mình.
+                </p>
+                <div className="flex flex-col gap-3 w-full max-w-xs">
+                    <input
+                        type="text"
+                        value={userIdInput}
+                        onChange={(e) => setUserIdInput(e.target.value)}
+                        placeholder="Nhập User ID"
+                        className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        onKeyPress={(e) => {
+                            if (e.key === "Enter") {
+                                handleSaveUserId();
+                            }
+                        }}
+                    />
+                    <button
+                        onClick={handleSaveUserId}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        disabled={!userIdInput.trim()}
+                    >
+                        Xác nhận
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex items-center justify-center min-h-screen flex-col">
